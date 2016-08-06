@@ -3,75 +3,55 @@ using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField]
-    Vector3 forwardV;
-    [SerializeField]
-    Vector3 position;
-    [SerializeField]
-    Vector3 velocity;
-    [SerializeField, Range(10f, 20f)]
-    float maxVelocity = 20f;
-    [SerializeField]
-    Vector3 accel;
-    
+    Rigidbody rigidBody;
+    float turnSpeed = 10.0f;
+    float speed = 5.0f;
+    float minSpeed = 5.0f;
+    float maxSpeed = 20f;
+
+    float timer;
+    float shootDelay = .25f;
+
 	// Use this for initialization
-	void Start () 
+    void OnEnable()
     {
-        forwardV = this.transform.forward;
-        position = this.transform.position;
-        velocity = Vector3.zero;
-        accel = Vector3.zero;
-	}
-	
-    float Square(float value)
-    {
-        return value * value;
+        timer = 0f;
+
+        rigidBody = GetComponent<Rigidbody>();
+        if (rigidBody.useGravity)
+            rigidBody.useGravity = false;
     }
-	
+
 	void Update () 
     {
+        timer += Time.deltaTime;
 
-        float hDir = Input.GetAxis("Horizontal");
+        if(Input.GetButton("Jump") && timer >= shootDelay)
+        {
+            ObjectPool pool = GetComponent<ObjectPool>();
+            pool.spawn(transform.position + transform.forward * 2f, transform.rotation);
+
+            timer = 0;
+        }
+
         float vDir = Input.GetAxis("Vertical");
-
-        transform.Rotate(Vector3.up, hDir * 5f);
-        forwardV = transform.forward;
-
-        position += forwardV * Time.deltaTime * (vDir * 10f);
-        transform.position = position;
-
-        //float dt = Time.deltaTime;
-        //forwardV = this.transform.forward;
-
-        //accel = Vector3.zero;
-
-        //if(Input.GetKey(KeyCode.W))
-        //{
-        //    accel = this.transform.forward;
-        //}
-        //else if (Input.GetKey(KeyCode.S))
-        //{
-        //    accel = -this.transform.forward;
-        //}
-
-        //float hDir = Input.GetAxis("Horizontal") * 10f;
+        float hDir = Input.GetAxis("Horizontal");
         
-        //if (hDir != 0)
-        //{
-        //    transform.Rotate(Vector3.up, hDir);
-        //    accel = this.transform.forward;
-        //}
+        if(vDir != 0)
+        {
+            if(vDir > 0)
+            {
+                if (speed < maxSpeed)
+                    speed++;
+            }
+            else
+            {
+                if (speed > minSpeed)
+                    speed--;
+            }
+        }
 
-        //accel *= 10f;
-
-        //position = ((accel * 0.5f) * Square(dt)) + (velocity * dt) + position;
-        //velocity = accel * dt + velocity;
-
-        ////velocity.z = Mathf.Clamp(velocity.z, maxVelocity * 0.5f, maxVelocity);
-        ////velocity.x = Mathf.Clamp(velocity.x, maxVelocity * 0.5f, maxVelocity);
-
-        //this.transform.position = position;
-
-        Debug.DrawLine(position, position + forwardV * 10f, Color.red);
+        rigidBody.velocity = transform.forward * speed;
+        transform.Rotate(Vector3.up, hDir, Space.World);
 	}
 }
