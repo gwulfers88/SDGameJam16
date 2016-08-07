@@ -35,7 +35,7 @@ public class Bullet : Photon.MonoBehaviour
             stream.SendNext(transform.position);
             stream.SendNext(transform.rotation);
         }
-        else
+        else if(stream.isReading)
         {
             Debug.Log("Their bullet");
             position = (Vector3)stream.ReceiveNext();
@@ -46,14 +46,17 @@ public class Bullet : Photon.MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        position += transform.forward * speed * Time.deltaTime;
-        transform.position = position;
-
-        timer += Time.deltaTime;
-
-        if (timer >= deathDelay)
+        if (photonView.isMine)
         {
-            this.gameObject.SetActive(false);
+            position += transform.forward * speed * Time.deltaTime;
+            transform.position = position;
+
+            timer += Time.deltaTime;
+
+            if (timer >= deathDelay)
+            {
+                this.gameObject.SetActive(false);
+            }
         }
     }
 }

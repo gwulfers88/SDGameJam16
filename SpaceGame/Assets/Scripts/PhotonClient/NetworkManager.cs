@@ -11,6 +11,9 @@ using UnityEngine.UI;
 public class NetworkManager : Photon.MonoBehaviour
 {
     [SerializeField]
+    public Text[] txtTeam;
+
+    [SerializeField]
     Text connectionText;
     [SerializeField]
     Transform[] spawnPoints;
@@ -18,7 +21,10 @@ public class NetworkManager : Photon.MonoBehaviour
     Camera sceneCam;
     [SerializeField]
     GameObject serverWindow;
-    
+
+    [SerializeField]
+    Material[] materials;
+
     public InputField username;
     [SerializeField]
     InputField roomName;
@@ -34,6 +40,8 @@ public class NetworkManager : Photon.MonoBehaviour
     GameObject player;
     ObjectPool bulletPools;
 
+    Dictionary<int, GameObject> players;
+    
     //public GameObject spawnEnemyPreab;
     //public GameObject goblinSpawn;
     public byte version = 1;
@@ -57,6 +65,8 @@ public class NetworkManager : Photon.MonoBehaviour
         photonView = GetComponent<PhotonView>();
         messages = new Queue<string>(messageCount);
 
+        players = new Dictionary<int, GameObject>();
+
         PhotonNetwork.ConnectUsingSettings("0.1");
         StartCoroutine("UpdateConnectionString");
         StartCoroutine(MyCoroutine());
@@ -76,6 +86,24 @@ public class NetworkManager : Photon.MonoBehaviour
     IEnumerator MyCoroutine()
     {
         yield return new WaitForSeconds(3f);
+    }
+
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo messageInfo)
+    {
+        if (stream.isWriting)
+        {
+            stream.SendNext(txtTeam[0].text);
+            stream.SendNext(txtTeam[1].text);
+            stream.SendNext(txtTeam[2].text);
+            stream.SendNext(txtTeam[3].text);
+        }
+        else if (stream.isReading)
+        {
+            txtTeam[0].text = (string)stream.ReceiveNext();
+            txtTeam[1].text = (string)stream.ReceiveNext();
+            txtTeam[2].text = (string)stream.ReceiveNext();
+            txtTeam[3].text = (string)stream.ReceiveNext();
+        }
     }
 
     public void OnGUI()
@@ -122,7 +150,10 @@ public class NetworkManager : Photon.MonoBehaviour
 
         foreach(string message in messages)
         {
-            GUILayout.Label(message);
+            GUIStyle style = new GUIStyle();
+            style.normal.textColor = Color.red;
+
+            GUILayout.Label(message, style);
         }
 
         GUILayout.EndScrollView();
@@ -224,6 +255,7 @@ public class NetworkManager : Photon.MonoBehaviour
         PhotonNetwork.JoinRandomRoom();
         PhotonNetwork.JoinOrCreateRoom(roomName.text, roomOptions, TypedLobby.Default);
     }
+
     public void OnJoinedRoom()
     {
         //serverWindow.SetActive(false);
@@ -249,10 +281,40 @@ public class NetworkManager : Photon.MonoBehaviour
                                 spawnPoints[index].rotation, 0);
         player.GetComponent<PlayerNetwork>().RespawnMe += StartSpawnProcess;
         player.GetComponent<PlayerNetwork>().SendNetworkMessage += AddLine;
-        
+        int id = PhotonNetwork.countOfPlayers;
+        string type = "";
+        switch((PlayerController.Type)id)
+        {
+            case PlayerController.Type.Leader:
+                player.AddComponent<Leader>();
+                type = "Leader";
+                player.GetComponent<Renderer>().material = materials[0];
+                break;
+            case PlayerController.Type.Healer:
+                type = "Healer";
+                player.AddComponent<Healer>();
+                player.GetComponent<Renderer>().material = materials[1];
+                break;
+            case PlayerController.Type.Defender:
+                type = "Defender";
+                player.AddComponent<Defender>();
+                player.GetComponent<Renderer>().material = materials[2];
+                break;
+            case PlayerController.Type.Heavy:
+                type = "Heavy";
+                player.AddComponent<Heavy>();
+                player.GetComponent<Renderer>().material = materials[3];
+                break;
+        }
+        PhotonNetwork.player.name = type;
+        player.GetComponent<PlayerController>().playerType = (PlayerController.Type)PhotonNetwork.countOfPlayers;
+        players.Add(PhotonNetwork.countOfPlayers, player);
+        Debug.Log("Number of players " + PhotonNetwork.countOfPlayers);
         sceneCam.enabled = false;
+        txtTeam[id - 1].text = type + " " + player.GetComponent<PlayerNetwork>().GetHealth().ToString();
+        txtTeam[id - 1].enabled = true;
         /*AddMessage("Joined player: " + PhotonNetwork.player.name);*/
-        AddLine(PhotonNetwork.player.name + " has joined the room");
+        AddLine(PhotonNetwork.player.name + " has joined the room as " + type.ToString());
     }
     void AddMessage(string message)
     {

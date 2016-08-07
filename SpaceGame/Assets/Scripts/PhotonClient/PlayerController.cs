@@ -9,8 +9,11 @@ using Photon;
 [RequireComponent(typeof(PhotonView))]
 public class PlayerController : Photon.MonoBehaviour
 {
+    public enum Type { None = 0, Leader, Healer, Defender, Heavy };
+
     Vector3 position;
     Quaternion rotation;
+    public Type playerType;
 
     Rigidbody rigidBody;
     float turnSpeed = 10.0f;
@@ -57,6 +60,30 @@ public class PlayerController : Photon.MonoBehaviour
     {
         if (photonView.isMine)
         {
+            switch (playerType)
+            {
+                case Type.None:
+                    Debug.Log("You are nothing yet");
+                    break;
+
+                case Type.Leader:
+                    Debug.Log("You are The leader");
+                    break;
+
+                case Type.Healer:
+                    Debug.Log("You are The Healer");
+                    break;
+
+                case Type.Heavy:
+                    Debug.Log("You are Heavy");
+                    break;
+
+                case Type.Defender:
+                    Debug.Log("You are the Defender");
+                    break;
+            }
+                
+
             if (PhotonNetwork.connected)
                 Debug.Log("Connected!");
             else
@@ -76,7 +103,8 @@ public class PlayerController : Photon.MonoBehaviour
             float hDir = Input.GetAxis("Horizontal");
 
             float mouseVert = Input.GetAxis("Mouse Y");
-            
+            float mouseHor = Input.GetAxis("Mouse X");
+
             if (vDir != 0)
             {
                 if (vDir > 0)
@@ -94,8 +122,14 @@ public class PlayerController : Photon.MonoBehaviour
             rigidBody.velocity = transform.forward * speed;
             transform.Rotate(Vector3.up, hDir, Space.World);
             transform.Rotate(Vector3.right, mouseVert, Space.Self);
+            transform.Rotate(Vector3.forward, -mouseHor, Space.Self);
         }
         
+    }
+    
+    public Type GetPlayerType()
+    {
+        return playerType;
     }
 
     //void OnDrawGizmos()

@@ -65,9 +65,31 @@ public class PlayerNetwork : Photon.MonoBehaviour
         yield return null;
     }
 
+    public int GetPhotonID()
+    {
+        return PhotonNetwork.player.ID;
+    }
+
     // Update is called once per frame
     void Update ()
     {
+        if (photonView.isMine)
+        {
+            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+            foreach (GameObject player in players)
+            {
+                if (player.GetInstanceID() != this.GetInstanceID())
+                {
+                    Debug.Log("Player Found: " + player.name);
+                    float dist = Vector3.Distance(player.transform.position, transform.position);
+                    if(dist > 100.0f)
+                    {
+                        GameObject.Find("NetworkManager").GetPhotonView().RPC("AddMessage_RPC", PhotonNetwork.player.Get(player.GetComponent<PlayerNetwork>().GetPhotonID()), "WARNING: You are leaveing you team!!");
+                    }
+                }
+            }
+        }
+
 	    //if(!photonView.isMine)
      //   {
      //       transform.position = Vector3.Lerp(transform.position, position, Time.deltaTime * 5f);
@@ -77,21 +99,45 @@ public class PlayerNetwork : Photon.MonoBehaviour
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo messageInfo)
     {
+        int type = (int)GetComponent<PlayerController>().GetPlayerType();
+
         if (stream.isWriting)
         {
             Debug.Log("We own you!");
             stream.SendNext(transform.position);
             stream.SendNext(transform.rotation);
             stream.SendNext(health);
-            
+            stream.SendNext(GameObject.Find("NetworkManager").GetComponent<NetworkManager>().txtTeam[type - 1].text);
         }
-        else
+        else if (stream.isReading)
         {
             Debug.Log("They own you!");
             position = (Vector3)stream.ReceiveNext();
             rotation = (Quaternion)stream.ReceiveNext();
             health = (float)stream.ReceiveNext();
+            GameObject.Find("NetworkManager").GetComponent<NetworkManager>().txtTeam[type - 1].text = (string)stream.ReceiveNext();
+
+            SendNetworkMessage(health.ToString() + " " + type);
+
+            //if (GameObject.Find("NetworkManager").GetComponent<NetworkManager>().txtTeam[type - 1].enabled == false)
+            //{
+            //    GameObject.Find("NetworkManager").GetComponent<NetworkManager>().txtTeam[type - 1].enabled = true;    
+            //}
+            //else
+            //{
+            //    GameObject.Find("NetworkManager").GetComponent<NetworkManager>().txtTeam[type - 1].text = PhotonNetwork.player.name + " " + health;
+            //}
         }
+    }
+
+    public void SetHealth(float health)
+    {
+        this.health = health;
+    }
+
+    public float GetHealth()
+    {
+        return health;
     }
 
     [PunRPC]
@@ -113,6 +159,8 @@ public class PlayerNetwork : Photon.MonoBehaviour
 
                 PhotonNetwork.Destroy(gameObject);
             }
+
+            SendNetworkMessage("BATTLELOG: " + PhotonNetwork.player.name + " took " + damage + " damage!");
         }
     }
 
