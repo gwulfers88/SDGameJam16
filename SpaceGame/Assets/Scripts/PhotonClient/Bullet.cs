@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Bullet : MonoBehaviour
+public class Bullet : Photon.MonoBehaviour
 {
     Vector3 position;
+    Quaternion rotation;
+
     float timer;
     float deathDelay = 5f;
     float speed = 100f;
@@ -11,8 +13,13 @@ public class Bullet : MonoBehaviour
 	// Use this for initialization
 	void OnEnable ()
     {
-        position = transform.position;
-        timer = 0;
+        if (photonView.isMine)
+        {
+            position = transform.position;
+            rotation = transform.rotation;
+
+            timer = 0;
+        }
 	}
 	
     void OnDisable()
@@ -20,17 +27,33 @@ public class Bullet : MonoBehaviour
 
     }
 
-	// Update is called once per frame
-	void Update ()
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo messageInfo)
+    {
+        if (stream.isWriting)
+        {
+            Debug.Log("My bullet");
+            stream.SendNext(transform.position);
+            stream.SendNext(transform.rotation);
+        }
+        else
+        {
+            Debug.Log("Their bullet");
+            position = (Vector3)stream.ReceiveNext();
+            rotation = (Quaternion)stream.ReceiveNext();
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
     {
         position += transform.forward * speed * Time.deltaTime;
         transform.position = position;
 
         timer += Time.deltaTime;
 
-        if(timer >= deathDelay)
+        if (timer >= deathDelay)
         {
             this.gameObject.SetActive(false);
         }
-	}
+    }
 }

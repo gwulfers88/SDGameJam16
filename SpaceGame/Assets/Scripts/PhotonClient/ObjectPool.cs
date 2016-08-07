@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class ObjectPool : MonoBehaviour
+public class ObjectPool : Photon.MonoBehaviour
 {
     public string objToSpawn;
     List<GameObject> pool;
@@ -14,11 +14,15 @@ public class ObjectPool : MonoBehaviour
 	// Use this for initialization
 	void Start ()
     {
-        pool = new List<GameObject>();
-        
-        while(poolSize != startSize)
+        if (photonView.isMine)
         {
-            addToPool(Instantiate(Resources.Load(objToSpawn), Vector3.zero, Quaternion.identity) as GameObject);
+            pool = new List<GameObject>();
+
+            while (poolSize != startSize)
+            {
+                Debug.Log("Adding to pool");
+                addToPool(PhotonNetwork.Instantiate(objToSpawn, Vector3.zero, Quaternion.identity, 0));
+            }
         }
 	}
 	
