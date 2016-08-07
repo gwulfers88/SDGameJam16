@@ -9,6 +9,8 @@ public class Bullet : Photon.MonoBehaviour
     float timer;
     float deathDelay = 5f;
     float speed = 100f;
+    float damage;
+    string owner;
 
 	// Use this for initialization
 	void OnEnable ()
@@ -24,7 +26,14 @@ public class Bullet : Photon.MonoBehaviour
 	
     void OnDisable()
     {
+        position = Vector3.zero;
+        rotation = Quaternion.identity;
+        timer = 0;
+    }
 
+    public void SetOwner(string newOwner)
+    {
+        owner = newOwner;
     }
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo messageInfo)
@@ -57,6 +66,20 @@ public class Bullet : Photon.MonoBehaviour
             {
                 this.gameObject.SetActive(false);
             }
+        }
+    }
+
+    void Destroy()
+    {
+        this.gameObject.SetActive(false);
+    }
+
+    void OnCollisionEnter(Collision col)
+    {
+        if(col.collider.CompareTag("Enemy"))
+        {
+            Destroy();
+            col.collider.gameObject.GetComponent<EnemyHealth>().Explode();
         }
     }
 }

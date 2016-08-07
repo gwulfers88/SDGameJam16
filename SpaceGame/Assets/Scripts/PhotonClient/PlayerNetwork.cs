@@ -15,6 +15,7 @@ public class PlayerNetwork : Photon.MonoBehaviour
     private Vector3 position;
     private Quaternion rotation;
     private float smoothing = 10000f;
+    private float attack;
 
     public delegate void Respawn(float time);
     public event Respawn RespawnMe;
@@ -84,7 +85,7 @@ public class PlayerNetwork : Photon.MonoBehaviour
                     float dist = Vector3.Distance(player.transform.position, transform.position);
                     if(dist > 100.0f)
                     {
-                        GameObject.Find("NetworkManager").GetPhotonView().RPC("AddMessage_RPC", PhotonNetwork.player.Get(player.GetComponent<PlayerNetwork>().GetPhotonID()), "WARNING: You are leaveing you team!!");
+                        SendNetworkMessage("WARNING: [" + player.name + "] is getting far from the team!");
                     }
                 }
             }
@@ -108,6 +109,7 @@ public class PlayerNetwork : Photon.MonoBehaviour
             stream.SendNext(transform.rotation);
             stream.SendNext(health);
             stream.SendNext(GameObject.Find("NetworkManager").GetComponent<NetworkManager>().txtTeam[type - 1].text);
+            stream.SendNext(GetComponent<Renderer>().material);
         }
         else if (stream.isReading)
         {
@@ -116,7 +118,7 @@ public class PlayerNetwork : Photon.MonoBehaviour
             rotation = (Quaternion)stream.ReceiveNext();
             health = (float)stream.ReceiveNext();
             GameObject.Find("NetworkManager").GetComponent<NetworkManager>().txtTeam[type - 1].text = (string)stream.ReceiveNext();
-
+            GetComponent<Renderer>().material = (Material)stream.ReceiveNext();
             SendNetworkMessage(health.ToString() + " " + type);
 
             //if (GameObject.Find("NetworkManager").GetComponent<NetworkManager>().txtTeam[type - 1].enabled == false)
@@ -138,6 +140,16 @@ public class PlayerNetwork : Photon.MonoBehaviour
     public float GetHealth()
     {
         return health;
+    }
+
+    public void SetAttack(float attack)
+    {
+        this.attack = attack;
+    }
+
+    public float GetAttack()
+    {
+        return attack;
     }
 
     [PunRPC]

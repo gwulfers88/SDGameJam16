@@ -42,8 +42,8 @@ public class NetworkManager : Photon.MonoBehaviour
 
     Dictionary<int, GameObject> players;
     
-    //public GameObject spawnEnemyPreab;
-    //public GameObject goblinSpawn;
+    public GameObject spawnEnemyPreab;
+    public GameObject goblinSpawn;
     public byte version = 1;
 
     public Rect guiRect = new Rect(0, 0, 250, 300);
@@ -264,7 +264,7 @@ public class NetworkManager : Photon.MonoBehaviour
         StartSpawnProcess(0f);
         Debug.Log("OnJoinedRoom() called by PUN. Now this client is in a room. From here on, your game would be running. For reference, all callbacks are listed in enum: PhotonNetworkingMessage");
         //SpawnPlayer(3f);
-        //SpawnEnemy();
+        SpawnEnemy();
     }
     void StartSpawnProcess(float respawnTime)
     {
@@ -330,7 +330,7 @@ public class NetworkManager : Photon.MonoBehaviour
     {
         if (PhotonNetwork.isMasterClient)
         {
-            //PhotonNetwork.Instantiate(GoblinSpawner.name, GoblinSpawner.transform.position, Quaternion.identity, 0);
+            PhotonNetwork.Instantiate(goblinSpawn.name, goblinSpawn.transform.position, Quaternion.identity, 0);
         }
     }
 

@@ -7,6 +7,7 @@ public class Leader : Photon.MonoBehaviour
     const float maxHealth = 150f;
     float defense = .35f;
     float health;
+    float attack;
 
     // Use this for initialization
     void Start()
@@ -14,7 +15,9 @@ public class Leader : Photon.MonoBehaviour
         if (photonView.isMine)
         {
             health = maxHealth;
+            attack = 35;
             GetComponent<PlayerNetwork>().SetHealth(health);
+            GetComponent<PlayerNetwork>().SetAttack(attack);
         }
     }
 
@@ -30,9 +33,16 @@ public class Leader : Photon.MonoBehaviour
         GetComponent<PlayerNetwork>().PlayerDamage(totalDamage);
     }
 
+    public float DoDamage()
+    {
+        return attack;
+    }
+
     void OnCollisionEnter(Collision col)
     {
-        Debug.Log("TEST: Got hit!");
-        TakeDamage(20);
+        if(col.collider.CompareTag("Enemy"))
+        {
+            Debug.Log("TEST: Got hit!");
+        }
     }
 }

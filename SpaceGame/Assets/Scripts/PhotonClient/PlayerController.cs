@@ -94,7 +94,7 @@ public class PlayerController : Photon.MonoBehaviour
             if (Input.GetButton("Jump") && timer >= shootDelay)
             {
                 Debug.Log("Player with ID " + PhotonNetwork.player.ID);
-                pool.spawn(transform.position + transform.forward * 2f, transform.rotation);
+                pool.spawn(transform.position + transform.forward * 3f, transform.rotation);
 
                 timer = 0;
             }
