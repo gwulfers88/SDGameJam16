@@ -21,6 +21,10 @@ public class WarriorFSMOOP : Steering
     public float _minHealthLimit;
     public int _number = 0;
     public GameObject _target;
+    MachineGun _machine_Gun_Script;
+    float timer;
+    float shootDelay = 5f;
+    ObjectPool pool;
     //public GameObject[] _nodes;
     //public Transform[] waypoints;
     //public Transform waypoint;
@@ -28,6 +32,7 @@ public class WarriorFSMOOP : Steering
     //public int maxWaypoint = 0;
     public GameObject _player;
     EnemyHealth _enemyHealth;
+    AudioSource _pewPew;
     #endregion
     // Use this for initialization
 
@@ -35,10 +40,12 @@ public class WarriorFSMOOP : Steering
     {
         _player = GameObject.FindGameObjectWithTag("Player");
         _target = _player;
+        pool = GetComponent<ObjectPool>();
+        _pewPew = GetComponent<AudioSource>();
         //CurWayPoint = 0;
         //waypoint = waypoints[CurWayPoint];
         //maxWaypoint = waypoints.Length - 1;
-        SpawnState();
+        //SpawnState();
         _state.Init();
 
     }
@@ -47,30 +54,60 @@ public class WarriorFSMOOP : Steering
     void Update()
     {
         transform.position += transform.forward * _fleeSpeed * Time.deltaTime;
-        _player = GameObject.Find("Player1(Clone)");
+        _player = GameObject.FindGameObjectWithTag("Player");
         _target = _player;
         if(_target)
         {
+            Debug.Log("Enemy found target : " + _target);
             transform.LookAt(_player.transform);
             seek = true;
             seekWeight = 5;
+            timer += Time.deltaTime;
+            GameObject[] objs = GameObject.FindGameObjectsWithTag("Player");
+            //Set distance to infinity, so first rock we look at is closest
+            float distance = Mathf.Infinity;
+            float d = 200f;
+            //Look for nearest rock
+            foreach (GameObject obj in objs)
+            {
+                if( d < distance)
+                {
+                    if (timer >= shootDelay)
+                    {
+                        Debug.Log("Player with ID " + PhotonNetwork.player.ID);
+                        pool.spawn(transform.position + transform.forward * 10f, transform.rotation);
+                        _pewPew.Play();
+                        timer = 0;
+                    }
+                }
+            }
+            
         }
-        if (_state.next != null)
+        if (_state)
         {
-            _state.Finish();
-            _state = _state.next;
-            _state.Init();
-        }
+            if (_state.next != null)
+            {
+                _state.Finish();
+                _state = _state.next;
+                _state.Init();
+            }
 
-        _state.Update();
+            _state.Update();
+        }
         Locomotion();
     }
 
     void OnCollisionEnter(Collision other)
     {
-        if (other.collider.tag == "Bullet")
+        if(other.collider.CompareTag("Player") || other.collider.tag == "Bullet")
         {
-            Debug.Log("I'm hit");
+            _enemyHealth = GetComponent<EnemyHealth>();
+            if (_enemyHealth)
+            {
+                _enemyHealth.Explode();
+            }
+            Debug.Log("Exploded!");
+            Debug.Log("Alien got hit");
         }
     }
     void SpawnState()

@@ -14,6 +14,9 @@ public class MachineGun : Photon.MonoBehaviour
     public GameObject _enemyObj;
     EnemyHealth _enemyHealth;
 
+    float timer;
+    float shootDelay = .25f;
+    ObjectPool pool;
 
     //public GameObject smoke;
     //public GameObject bigExplosion;
@@ -36,11 +39,20 @@ public class MachineGun : Photon.MonoBehaviour
     public void Fire()
     {
         _enemyObj = GameObject.FindGameObjectWithTag("Player");
+        pool = GetComponent<ObjectPool>();
         //_enemyHealth = _enemyObj.GetComponent<EnemyHealth>();
         weapon_Fire_Timer = 0.0F;
         gun_Emitter_Object.GetComponent<ParticleEmitter>().emit = true;
         //Debug.Log(weapon_Fire_Timer + "TIME is Working");
+        //timer += Time.deltaTime;
 
+        //if (timer >= shootDelay)
+        //{
+        //    Debug.Log("Player with ID " + PhotonNetwork.player.ID);
+        //    pool.spawn(transform.position + transform.forward * 10f, transform.rotation);
+        //    //_pewPew.Play();
+        //    timer = 0;
+        //}
         if (!gun_Emitter_Object.GetComponent<AudioSource>().isPlaying)
         {
             gun_Emitter_Object.GetComponent<AudioSource>().Play();
@@ -69,4 +81,5 @@ public class MachineGun : Photon.MonoBehaviour
         weapon_Fire_Timer += Time.deltaTime;
         //Debug.Log(weapon_Fire_Timer + "TIME is Working");
     }
+    
 }

@@ -9,7 +9,7 @@ public class ObjectPool : Photon.MonoBehaviour
     
     public int poolSize = 0;
     int startSize = 5;
-    const int maxSize = 10;
+    const int maxSize = 20;
 
 	// Use this for initialization
 	void Start ()

@@ -1,24 +1,41 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour 
 {
+    AudioSource _ehehe;
+    float timer = 3f;
+    void Start()
+    {
+        _ehehe = GetComponent<AudioSource>();
+    }
 	public void OnMultiplayerClicked()
 	{
-		Application.LoadLevel ("CharacterSelection");
+        _ehehe.Play();
+        SceneManager.LoadScene("CharacterSelection");
 	}
 
 	public void OnOptionsClicked()
 	{
-		Application.LoadLevel ("Options");
+        _ehehe.Play();
+        SceneManager.LoadScene("Options");
+        
 	}
 
     public void LeaderboardClicked()
     {
-        Application.LoadLevel("Leaderboard");
+        _ehehe.Play();
+
+        SceneManager.LoadScene("Leaderboard");
+        
+       
     }
     public void CreditsClicked()
     {
-        Application.LoadLevel("Credits");
+        _ehehe.Play();
+        SceneManager.LoadScene("Credits");
     }
 }
+
+    

@@ -1,10 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class Credits : MonoBehaviour
 {
     public void BackButtonClicked()
     {
-        Application.LoadLevel("MainMenu");
+        SceneManager.LoadScene("MainMenu");
     }
 }
+
+
+
+
+

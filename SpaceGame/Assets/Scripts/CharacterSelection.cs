@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class CharacterSelection : MonoBehaviour 
 {
 	public void BackButtonClicked()
 	{
-		Application.LoadLevel ("MainMenu");
+		SceneManager.LoadScene("MainMenu");
 	}
 }

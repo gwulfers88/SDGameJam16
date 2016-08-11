@@ -25,10 +25,12 @@ public class PlayerController : Photon.MonoBehaviour
     float shootDelay = .25f;
     ObjectPool pool;
     GameObject debugSphere;
+    AudioSource _pewPew;
 
     // Use this for initialization
     void Start()
     {
+        _pewPew = GetComponent<AudioSource>();
         rigidBody = GetComponent<Rigidbody>();
         pool = GetComponent<ObjectPool>();
 
@@ -94,8 +96,8 @@ public class PlayerController : Photon.MonoBehaviour
             if (Input.GetButton("Jump") && timer >= shootDelay)
             {
                 Debug.Log("Player with ID " + PhotonNetwork.player.ID);
-                pool.spawn(transform.position + transform.forward * 3f, transform.rotation);
-
+                pool.spawn(transform.position + transform.forward * 20f, transform.rotation);
+                _pewPew.Play();
                 timer = 0;
             }
 

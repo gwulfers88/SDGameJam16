@@ -53,6 +53,7 @@ public class EnemyHealth : Photon.MonoBehaviour
     {
         poolObj = GameObject.Find("ExplosionPOOL");
         explosionPool = poolObj.GetComponent<ExplosionPOOL>();
+        _player = GameObject.FindGameObjectWithTag("Player");
         //_HQmessagesText = GameObject.FindGameObjectWithTag("messages").GetComponent<Text>();
         //Debug.Log("hq messages is found : " + _HQmessagesText);
         //_HQmessagesText.text = _HQmessages + System.Environment.NewLine + "WHAT THE FUCK";
@@ -63,7 +64,7 @@ public class EnemyHealth : Photon.MonoBehaviour
 
         if (healthBar)
         {
-            _player = GameObject.Find("Player");
+            _player = GameObject.FindGameObjectWithTag("Player");
             //_hqHealth = _HQ.GetComponent<HQ_Health>();
             healthBar.transform.position = target.position + healthBarOffset;
             healthBar.transform.rotation = Camera.main.transform.rotation;

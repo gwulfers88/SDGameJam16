@@ -33,6 +33,6 @@ public class Heavy : Photon.MonoBehaviour
     void OnCollisionEnter(Collision col)
     {
         Debug.Log("TEST: Got hit!");
-        TakeDamage(20);
+       TakeDamage(20);
     }
 }

@@ -21,10 +21,7 @@ public class NetworkManager : Photon.MonoBehaviour
     Camera sceneCam;
     [SerializeField]
     GameObject serverWindow;
-
-    [SerializeField]
-    Material[] materials;
-
+    
     public InputField username;
     [SerializeField]
     InputField roomName;
@@ -32,6 +29,8 @@ public class NetworkManager : Photon.MonoBehaviour
     InputField roomList;
     [SerializeField]
     InputField messageWindow;
+    [SerializeField]
+    GameObject _p1CrossHair;
 
     Queue<string> messages;
     const int messageCount = 6;
@@ -43,7 +42,7 @@ public class NetworkManager : Photon.MonoBehaviour
     Dictionary<int, GameObject> players;
     
     public GameObject spawnEnemyPreab;
-    public GameObject goblinSpawn;
+    public GameObject _warriorSpawn;
     public byte version = 1;
 
     public Rect guiRect = new Rect(0, 0, 250, 300);
@@ -58,29 +57,37 @@ public class NetworkManager : Photon.MonoBehaviour
 
     void Start()
     {
-        if(this.alignedBottom)
-        {
-            this.guiRect.y = Screen.height - this.guiRect.height;
-        }
-        photonView = GetComponent<PhotonView>();
-        messages = new Queue<string>(messageCount);
-
-        players = new Dictionary<int, GameObject>();
-
-        PhotonNetwork.ConnectUsingSettings("0.1");
-        StartCoroutine("UpdateConnectionString");
-        StartCoroutine(MyCoroutine());
-        //playerObject = GameObject.Find("Player1");
-        //if (playerObject)
-        //{
-        //    Debug.Log("Found " + playerObject.name);
-        //    playerController = playerObject.GetComponent<PlayerController>();
-        //}
-        //else
-        //{
-        //    Debug.Log("Not Found.");
-        //}
+       
+            if (this.alignedBottom)
+            {
+                this.guiRect.y = Screen.height - this.guiRect.height;
+            }
         
+            photonView = GetComponent<PhotonView>();
+            messages = new Queue<string>(messageCount);
+
+            players = new Dictionary<int, GameObject>();
+
+            PhotonNetwork.ConnectUsingSettings("0.1");
+            StartCoroutine("UpdateConnectionString");
+            StartCoroutine(MyCoroutine());
+           
+            sceneCam = GameObject.Find("SceneCamera").GetComponent<Camera>();
+            sceneCam.enabled = true;
+            _p1CrossHair = GameObject.Find("_p1CrossHair");
+            Debug.Log("found +" + _p1CrossHair);
+            _p1CrossHair.SetActive(false);
+            
+                //playerObject = GameObject.Find("Player1");
+            //if (playerObject)
+            //{
+            //    Debug.Log("Found " + playerObject.name);
+            //    playerController = playerObject.GetComponent<PlayerController>();
+            //}
+            //else
+            //{
+            //    Debug.Log("Not Found.");
+            //}
     }
 
     IEnumerator MyCoroutine()
@@ -168,6 +175,7 @@ public class NetworkManager : Photon.MonoBehaviour
     [PunRPC]
     public void ChatLine(string newLine, PhotonMessageInfo info)
     {
+       
         string senderName = "anonymous";
         if (info != null && info.sender != null)
         {
@@ -246,6 +254,10 @@ public class NetworkManager : Photon.MonoBehaviour
 
     public void JoinRoom()
     {
+       
+        sceneCam.enabled = false;
+        
+        
         PhotonNetwork.player.name = "Player";//username.text; //spawn player's name
         RoomOptions roomOptions = new RoomOptions()
         {
@@ -258,64 +270,91 @@ public class NetworkManager : Photon.MonoBehaviour
 
     public void OnJoinedRoom()
     {
-        //serverWindow.SetActive(false);
+        if (photonView.isMine)
+        {
+            serverWindow.SetActive(false);
+        }
         StopCoroutine("UpdateConnectionString");
         connectionText.text = "";
         StartSpawnProcess(0f);
         Debug.Log("OnJoinedRoom() called by PUN. Now this client is in a room. From here on, your game would be running. For reference, all callbacks are listed in enum: PhotonNetworkingMessage");
         //SpawnPlayer(3f);
         SpawnEnemy();
+        if (photonView.isMine)
+        {
+            _p1CrossHair.SetActive(true);
+        }
     }
     void StartSpawnProcess(float respawnTime)
     {
-        sceneCam.enabled = true;
+        if (photonView.isMine)
+        {
+            sceneCam.enabled = true;
+        }
         StartCoroutine("SpawnPlayer", respawnTime);
+        //SpawnPlayer(respawnTime);
     }
     IEnumerator SpawnPlayer(float respawnTime)
     {
+        //if (photonView.isMine)
+        //{
+        //    if(sceneCam.enabled)
+        //        sceneCam.enabled = false;
+        //}
         yield return new WaitForSeconds(respawnTime);
-
-        int index = Random.Range(0, spawnPoints.Length);
-        player = PhotonNetwork.Instantiate("Player1",
-                                spawnPoints[index].position,
-                                spawnPoints[index].rotation, 0);
-        player.GetComponent<PlayerNetwork>().RespawnMe += StartSpawnProcess;
-        player.GetComponent<PlayerNetwork>().SendNetworkMessage += AddLine;
+        
         int id = PhotonNetwork.countOfPlayers;
-        string type = "";
-        switch((PlayerController.Type)id)
+
+        if (id < 4)
         {
-            case PlayerController.Type.Leader:
-                player.AddComponent<Leader>();
-                type = "Leader";
-                player.GetComponent<Renderer>().material = materials[0];
-                break;
-            case PlayerController.Type.Healer:
-                type = "Healer";
-                player.AddComponent<Healer>();
-                player.GetComponent<Renderer>().material = materials[1];
-                break;
-            case PlayerController.Type.Defender:
-                type = "Defender";
-                player.AddComponent<Defender>();
-                player.GetComponent<Renderer>().material = materials[2];
-                break;
-            case PlayerController.Type.Heavy:
-                type = "Heavy";
-                player.AddComponent<Heavy>();
-                player.GetComponent<Renderer>().material = materials[3];
-                break;
+            string type = "";
+            switch ((PlayerController.Type)id)
+            {
+                case PlayerController.Type.Leader:
+                    type = "Leader";
+                    break;
+                case PlayerController.Type.Healer:
+                    type = "Healer";
+                    break;
+                case PlayerController.Type.Defender:
+                    type = "Defender";
+                    break;
+                case PlayerController.Type.Heavy:
+                    type = "Heavy";
+                    break;
+            }
+
+            PhotonNetwork.player.name = type;
+
+            player = PhotonNetwork.Instantiate(type,
+                                    spawnPoints[id - 1].position,
+                                    spawnPoints[id - 1].rotation, 0);
+            player.GetComponent<PlayerNetwork>().RespawnMe += StartSpawnProcess;
+            player.GetComponent<PlayerNetwork>().SendNetworkMessage += AddLine;
+
+            AddMessage("ID: " + id);
+
+            player.GetComponent<PlayerController>().playerType = (PlayerController.Type)id;
+            //if (players.ContainsKey(id))
+            //{
+            //    players.Remove(id);
+            //}
+
+            //players.Add(id, player);
+
+            Debug.Log("Number of players " + PhotonNetwork.countOfPlayers);
+            sceneCam.enabled = false;
+            txtTeam[id - 1].text = type + " " + player.GetComponent<PlayerNetwork>().GetHealth().ToString();
+            txtTeam[id - 1].enabled = true;
+            /*AddMessage("Joined player: " + PhotonNetwork.player.name);*/
+            AddLine(PhotonNetwork.player.name + " has joined the room as " + type.ToString());
         }
-        PhotonNetwork.player.name = type;
-        player.GetComponent<PlayerController>().playerType = (PlayerController.Type)PhotonNetwork.countOfPlayers;
-        players.Add(PhotonNetwork.countOfPlayers, player);
-        Debug.Log("Number of players " + PhotonNetwork.countOfPlayers);
-        sceneCam.enabled = false;
-        txtTeam[id - 1].text = type + " " + player.GetComponent<PlayerNetwork>().GetHealth().ToString();
-        txtTeam[id - 1].enabled = true;
-        /*AddMessage("Joined player: " + PhotonNetwork.player.name);*/
-        AddLine(PhotonNetwork.player.name + " has joined the room as " + type.ToString());
+        else
+        {
+            AddMessage("[ERROR]: Room is Full!!");
+        }
     }
+
     void AddMessage(string message)
     {
         photonView.RPC("AddMessage_RPC", PhotonTargets.All, message);
@@ -326,11 +365,12 @@ public class NetworkManager : Photon.MonoBehaviour
     //{
     //    PhotonNetwork.Instantiate(player.name, player.transform.position, Quaternion.identity, 0);
     //}
+    [PunRPC]
     void SpawnEnemy()
     {
         if (PhotonNetwork.isMasterClient)
         {
-            PhotonNetwork.Instantiate(goblinSpawn.name, goblinSpawn.transform.position, Quaternion.identity, 0);
+            PhotonNetwork.Instantiate(_warriorSpawn.name, _warriorSpawn.transform.position, Quaternion.identity, 0);
         }
     }
 

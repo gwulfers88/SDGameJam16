@@ -32,6 +32,7 @@ public class Healer : Photon.MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
+        
         Debug.Log("Got hit!");
         TakeDamage(20);
     }
